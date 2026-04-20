@@ -1,1 +1,11 @@
-<p>upload works!</p>
+<h2>Upload SRS</h2>
+
+<input type="file" (change)="onFileSelected($event)">
+<br><br>
+
+<button (click)="upload()">Analyze</button>
+
+<div *ngIf="result">
+  <h3>Suggested Model: {{ result.suggestedModel }}</h3>
+  <p>{{ result.reason }}</p>
+</div>
