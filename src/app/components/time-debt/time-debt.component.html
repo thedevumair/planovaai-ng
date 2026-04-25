@@ -1,0 +1,26 @@
+<h2>Time Debt Analysis</h2>
+
+<table border="1" cellpadding="10">
+  
+  <thead>
+    <tr>
+      <th>Task</th>
+      <th>Planned</th>
+      <th>Actual</th>
+      <th>Delay</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr *ngFor="let task of tasks">
+      <td>{{ task.title }}</td>
+      <td>{{ task.planned }}</td>
+      <td>{{ task.actual }}</td>
+
+      <td [style.color]="task.delay > 0 ? 'red' : 'green'">
+        {{ task.delay }}
+      </td>
+    </tr>
+  </tbody>
+
+</table>
