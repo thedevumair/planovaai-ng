@@ -1,0 +1,112 @@
+<div class="container" id="dashboard">
+  <h2>PlanovaAI Dashboard</h2>
+
+  <div class="timeline-bar">
+    <span>Start: {{ timelineSummary.start }}</span>
+    <span>End: {{ timelineSummary.end }}</span>
+    <span>{{ timelineSummary.totalDays }} Days</span>
+    <span>{{ timelineSummary.weeks }} Weeks</span>
+  </div>
+
+  <div class="top-panel">
+    <div class="card">
+      <h3>Upload SRS</h3>
+      <input type="file" (change)="onFileSelected($event)" />
+      <button (click)="upload()">Generate Plan</button>
+      <p *ngIf="loading">Processing AI...</p>
+    </div>
+    <div class="card">
+      <h3>Suggested Model</h3>
+      <p class="model">{{ model || "---" }}</p>
+    </div>
+    <div class="card">
+      <h3>Project Stats</h3>
+      <p>Total Tasks: {{ tasks.length }}</p>
+      <p>Total Duration: {{ totalDuration }} days</p>
+    </div>
+  </div>
+
+  <button (click)="exportPDF()">Export PDF</button>
+
+  <div class="card" *ngIf="tasks.length > 0">
+    <h3>Task Breakdown</h3>
+
+    <table class="task-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Task</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Progress</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <ng-container *ngFor="let t of tasks; let i = index">
+
+          <!-- ✅ Main task row -->
+          <tr class="task-row"
+              [class.has-subtasks]="getSubtasks(t.description).length > 0"
+              [class.expanded]="isExpanded(t.title)"
+              (click)="toggleTask(t.title)">
+
+            <!-- Expand icon -->
+            <td class="expand-icon">
+              <span *ngIf="getSubtasks(t.description).length > 0">
+                {{ isExpanded(t.title) ? '▼' : '▶' }}
+              </span>
+            </td>
+
+            <td class="task-title">
+              <span class="task-name">{{ t.title }}</span>
+              <span class="task-count"
+                    *ngIf="getSubtasks(t.description).length > 0">
+                {{ getSubtasks(t.description).length }} requirements
+              </span>
+            </td>
+            <td>{{ t.startDate }}</td>
+            <td>{{ t.endDate }}</td>
+            <td>{{ t.duration }} days</td>
+            <td>
+              <span class="badge" [ngClass]="(t.status || 'planned').toLowerCase()">
+                {{ t.status || 'Planned' }}
+              </span>
+            </td>
+            <td>
+              <div class="progress-wrap">
+                <div class="progress-bar">
+                  <div class="fill" [style.width.%]="t.progress || 0"></div>
+                </div>
+                <span>{{ t.progress || 0 }}%</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- ✅ Subtask rows — shown when expanded -->
+          <ng-container *ngIf="isExpanded(t.title)">
+            <tr class="subtask-row"
+                *ngFor="let sub of getSubtasks(t.description); let j = index">
+              <td></td>
+              <td class="subtask-title" colspan="1">
+                <span class="subtask-index">{{ j + 1 }}</span>
+                {{ sub }}
+              </td>
+              <td colspan="5" class="subtask-meta">
+                <span class="sub-badge">{{ t.type || 'FR' }}</span>
+              </td>
+            </tr>
+          </ng-container>
+
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions" *ngIf="tasks.length > 0">
+    <button (click)="goToGantt()">View Gantt</button>
+    <button (click)="goToTimeDebt()">View Time Debt</button>
+  </div>
+</div>

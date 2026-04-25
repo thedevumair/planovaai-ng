@@ -14,6 +14,6 @@ export class UploadService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post(`${this.baseUrl}/model/upload`, formData);
+    return this.http.post(`${this.baseUrl}/model/full-analysis`, formData);
   }
 }
