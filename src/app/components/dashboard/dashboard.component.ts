@@ -101,6 +101,10 @@ export class DashboardComponent implements OnInit {
         this.model = res.model;
         this.tasks = res.ganttTask || [];
 
+        if (res.projectId) {
+          localStorage.setItem('planova_project_id', res.projectId);
+        }
+
         this.totalDuration = this.tasks.reduce(
           (sum, t) => sum + (t.duration || 0),
           0,
@@ -337,6 +341,10 @@ export class DashboardComponent implements OnInit {
     } catch (e) {
       console.error('Failed to restore sub progress', e);
     }
+  }
+
+  goToTeam() {
+    this.router.navigate(['/team']);
   }
 
   closeModal() {
