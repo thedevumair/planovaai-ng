@@ -1,26 +1,132 @@
-<h2>Time Debt Analysis</h2>
+<div class="td-container">
+  <div class="td-header">
+    <button class="back-btn" (click)="goBack()">← Back</button>
+    <h2>⏱ Time Debt Analysis</h2>
+  </div>
 
-<table border="1" cellpadding="10">
-  
-  <thead>
-    <tr>
-      <th>Task</th>
-      <th>Planned</th>
-      <th>Actual</th>
-      <th>Delay</th>
-    </tr>
-  </thead>
+  <div *ngIf="loading" class="loading">Calculating time debt...</div>
 
-  <tbody>
-    <tr *ngFor="let task of tasks">
-      <td>{{ task.title }}</td>
-      <td>{{ task.planned }}</td>
-      <td>{{ task.actual }}</td>
+  <div *ngIf="result && !loading">
 
-      <td [style.color]="task.delay > 0 ? 'red' : 'green'">
-        {{ task.delay }}
-      </td>
-    </tr>
-  </tbody>
+    <!-- ✅ Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card debt">
+        <div class="card-icon">📅</div>
+        <div class="card-value">{{ result.totalDebtDays }}</div>
+        <div class="card-label">Total Debt Days</div>
+      </div>
 
-</table>
+      <div class="summary-card delayed">
+        <div class="card-icon">⚠️</div>
+        <div class="card-value">{{ result.delayedTaskCount }}</div>
+        <div class="card-label">Delayed Tasks</div>
+      </div>
+
+      <div class="summary-card risk" [ngClass]="getRiskClass(result.riskLevel)">
+        <div class="card-icon">🔥</div>
+        <div class="card-value">{{ result.riskLevel }}</div>
+        <div class="card-label">Risk Level</div>
+      </div>
+
+      <div class="summary-card recovery">
+        <div class="card-icon">🎯</div>
+        <div class="card-value">{{ result.recoveryDate }}</div>
+        <div class="card-label">Est. Recovery Date</div>
+      </div>
+    </div>
+
+    <!-- ✅ Task Table -->
+    <div class="td-card">
+      <h3>Task Status & Recovery Plan</h3>
+
+      <table class="td-table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Planned End</th>
+            <th>Progress</th>
+            <th>Debt Days</th>
+            <th>Status</th>
+            <th>Recovery End</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of result.tasks"
+              [ngClass]="{
+                'row-delayed': t.delayed,
+                'row-behind': t.behindSchedule,
+                'row-ok': !t.delayed && !t.behindSchedule
+              }">
+
+            <td class="task-name">{{ t.title }}</td>
+
+            <td>{{ t.plannedEnd }}</td>
+
+            <td>
+              <div class="progress-wrap">
+                <div class="progress-bar">
+                  <div class="fill"
+                       [style.width.%]="t.progress"
+                       [ngClass]="{
+                         'fill-danger': t.progress < 30,
+                         'fill-warning': t.progress >= 30 && t.progress < 70,
+                         'fill-success': t.progress >= 70
+                       }">
+                  </div>
+                </div>
+                <span>{{ t.progress }}%</span>
+              </div>
+            </td>
+
+            <td>
+              <span class="debt-badge" *ngIf="t.debtDays > 0">
+                +{{ t.debtDays }} days
+              </span>
+              <span class="ok-badge" *ngIf="t.debtDays === 0">On Track</span>
+            </td>
+
+            <td>
+              <span class="status-badge"
+                    [ngClass]="{
+                      'badge-delayed': t.delayed,
+                      'badge-behind': t.behindSchedule && !t.delayed,
+                      'badge-ok': !t.delayed && !t.behindSchedule
+                    }">
+                {{ t.delayed ? 'Overdue' : t.behindSchedule ? 'Behind' : 'On Track' }}
+              </span>
+            </td>
+
+            <td>
+              <span *ngIf="t.recoveryEnd" class="recovery-date">
+                📅 {{ t.recoveryEnd }}
+              </span>
+              <span *ngIf="!t.recoveryEnd" class="ok-text">—</span>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ✅ Risk Explanation -->
+    <div class="risk-box" [ngClass]="getRiskClass(result.riskLevel)">
+      <h4>Risk Assessment: {{ result.riskLevel }}</h4>
+      <p *ngIf="result.riskLevel === 'None'">
+        ✅ All tasks are on track. No time debt detected.
+      </p>
+      <p *ngIf="result.riskLevel === 'Low'">
+        ⚠️ Minor delays detected ({{ result.totalDebtDays }} days).
+        Review delayed tasks and adjust workload.
+      </p>
+      <p *ngIf="result.riskLevel === 'Medium'">
+        🔶 Moderate time debt ({{ result.totalDebtDays }} days).
+        Prioritize delayed tasks and consider adding resources.
+      </p>
+      <p *ngIf="result.riskLevel === 'High'">
+        🔴 Critical time debt ({{ result.totalDebtDays }} days)!
+        Immediate action required. Re-plan and reallocate resources.
+      </p>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,61 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-icon">📊</span>
+      <h1>PlanovaAI</h1>
+      <p>AI-Powered Project Planning</p>
+    </div>
+
+    <h2>Welcome Back</h2>
+    <p class="auth-subtitle">Sign in to your account</p>
+
+    <div class="error-msg" *ngIf="error">⚠️ {{ error }}</div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input
+        type="email"
+        [(ngModel)]="email"
+        placeholder="you@example.com"
+        (keyup.enter)="login()"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        placeholder="Enter your password"
+        (keyup.enter)="login()"
+      />
+    </div>
+
+    <button class="btn-primary" (click)="login()" [disabled]="loading">
+      <span *ngIf="!loading">Sign In</span>
+      <span *ngIf="loading">Signing in...</span>
+    </button>
+
+    <p class="auth-switch">
+      Don't have an account?
+      <a routerLink="/register">Create one</a>
+    </p>
+  </div>
+
+  <div class="auth-bg">
+    <div class="bg-card">
+      <h3>🚀 Smart Project Planning</h3>
+      <p>
+        Upload your SRS and let AI generate a complete project plan in seconds.
+      </p>
+    </div>
+    <div class="bg-card">
+      <h3>📊 Gantt Chart Generation</h3>
+      <p>Automatically visualize your project timeline with dependencies.</p>
+    </div>
+    <div class="bg-card">
+      <h3>⏱ Time Debt Tracking</h3>
+      <p>Monitor delays and get recovery plans before they become critical.</p>
+    </div>
+  </div>
+</div>

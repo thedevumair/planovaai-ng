@@ -1,0 +1,178 @@
+.td-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.td-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  h2 { margin: 0; color: #1a1a2e; font-size: 24px; }
+}
+
+.back-btn {
+  padding: 8px 16px;
+  background: #f0f4ff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #4e85f4;
+  font-weight: 600;
+  &:hover { background: #e0ecff; }
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+  font-size: 16px;
+}
+
+// ✅ Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  .card-icon { font-size: 28px; margin-bottom: 8px; }
+  .card-value { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+  .card-label { font-size: 13px; color: #888; margin-top: 4px; }
+
+  &.debt    { border-top: 4px solid #4e85f4; }
+  &.delayed { border-top: 4px solid #ff9800; }
+  &.recovery { border-top: 4px solid #4caf50; }
+
+  &.risk-none   { border-top: 4px solid #4caf50; .card-value { color: #4caf50; } }
+  &.risk-low    { border-top: 4px solid #ff9800; .card-value { color: #ff9800; } }
+  &.risk-medium { border-top: 4px solid #f44336; .card-value { color: #f44336; } }
+  &.risk-high   { border-top: 4px solid #b71c1c; .card-value { color: #b71c1c; } }
+}
+
+// ✅ Table
+.td-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+
+  h3 { margin: 0 0 16px; color: #1a1a2e; }
+}
+
+.td-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    background: #f0f4ff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+  }
+
+  .row-delayed td { background: #fff5f5; }
+  .row-behind td  { background: #fffbf0; }
+  .row-ok td      { background: #ffffff; }
+
+  .task-name {
+    font-weight: 500;
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ✅ Progress bar
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .progress-bar {
+    width: 80px;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+
+    .fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+      &.fill-danger  { background: #f44336; }
+      &.fill-warning { background: #ff9800; }
+      &.fill-success { background: #4caf50; }
+    }
+  }
+}
+
+// ✅ Badges
+.debt-badge {
+  background: #fdecea;
+  color: #f44336;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ok-badge {
+  background: #e8f5e9;
+  color: #4caf50;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.badge-delayed { background: #fdecea; color: #f44336; }
+  &.badge-behind  { background: #fff3e0; color: #ff9800; }
+  &.badge-ok      { background: #e8f5e9; color: #4caf50; }
+}
+
+.recovery-date { color: #4e85f4; font-size: 12px; font-weight: 500; }
+.ok-text { color: #ccc; }
+
+// ✅ Risk Box
+.risk-box {
+  border-radius: 12px;
+  padding: 20px 24px;
+  font-size: 14px;
+
+  h4 { margin: 0 0 8px; font-size: 16px; }
+  p  { margin: 0; line-height: 1.6; }
+
+  &.risk-none   { background: #e8f5e9; border-left: 5px solid #4caf50; h4 { color: #2e7d32; } }
+  &.risk-low    { background: #fff8e1; border-left: 5px solid #ff9800; h4 { color: #e65100; } }
+  &.risk-medium { background: #fff3e0; border-left: 5px solid #f44336; h4 { color: #c62828; } }
+  &.risk-high   { background: #fdecea; border-left: 5px solid #b71c1c; h4 { color: #b71c1c; } }
+}

@@ -3,8 +3,33 @@
   font-family: Arial, sans-serif;
 }
 
-h2 {
-  margin-bottom: 20px;
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+
+  h2 { margin: 0; }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #555;
+  }
+
+  .btn-logout {
+    padding: 6px 14px;
+    background: #fdecea;
+    color: #e53935;
+    border: 1px solid #ffcdd2;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    &:hover { background: #ffebee; }
+  }
 }
 
 /* 🔥 Top panel layout */
@@ -20,7 +45,7 @@ h2 {
   padding: 15px;
   border-radius: 10px;
   background: #f5f7fa;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* 🔥 Model highlight */
@@ -83,8 +108,14 @@ h2 {
   }
 
   @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .expand-icon {
@@ -187,5 +218,184 @@ h2 {
   span {
     font-size: 12px;
     color: #888;
+  }
+}
+
+.edit-btn {
+  padding: 4px 10px;
+  background: #f0f4ff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #4e85f4;
+  &:hover {
+    background: #e0ecff;
+  }
+}
+
+.progress-slider {
+  width: 80px;
+  cursor: pointer;
+  accent-color: #4e85f4;
+}
+
+// ✅ Modal
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  h3 {
+    margin: 0 0 8px;
+    color: #1a1a2e;
+    font-size: 18px;
+  }
+
+  .modal-task-name {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .modal-field {
+    margin-bottom: 20px;
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #333;
+      outline: none;
+      &:focus {
+        border-color: #4e85f4;
+      }
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #4e85f4;
+      margin-bottom: 8px;
+    }
+  }
+
+  .progress-preview {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+
+    .preview-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.2s;
+      &.fill-danger {
+        background: #f44336;
+      }
+      &.fill-warning {
+        background: #ff9800;
+      }
+      &.fill-success {
+        background: #4caf50;
+      }
+    }
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+
+    .btn-cancel {
+      padding: 8px 20px;
+      background: #f5f5f5;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #666;
+      font-weight: 600;
+      &:hover {
+        background: #eeeeee;
+      }
+    }
+
+    .btn-save {
+      padding: 8px 24px;
+      background: #4e85f4;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      font-weight: 600;
+      &:hover {
+        background: #3b6fd4;
+      }
+    }
+  }
+
+  .parent-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .parent-bar {
+      width: 60px;
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      overflow: hidden;
+
+      .parent-fill {
+        height: 100%;
+        background: #4e85f4;
+        border-radius: 2px;
+        transition: width 0.3s;
+      }
+    }
+
+    span {
+      font-size: 11px;
+      color: #888;
+    }
+  }
+
+  .modal-parent-name {
+    font-size: 11px;
+    color: #4e85f4;
+    margin-top: -12px;
+    margin-bottom: 16px;
+  }
+
+  .subtask-text {
+    font-size: 12px;
+    color: #555;
   }
 }
