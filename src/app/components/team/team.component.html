@@ -1,0 +1,177 @@
+<div class="team-container">
+  <!-- Header -->
+  <div class="team-header">
+    <button class="back-btn" (click)="goBack()">← Back</button>
+    <h2>👥 Team Management</h2>
+  </div>
+
+  <div class="team-layout">
+    <!-- ✅ LEFT — Add Members -->
+    <div class="team-panel">
+      <h3>Team Members</h3>
+
+      <!-- Add mode toggle -->
+      <div class="mode-toggle">
+        <button
+          [class.active]="addMode === 'email'"
+          (click)="addMode = 'email'"
+        >
+          By Email
+        </button>
+        <button
+          [class.active]="addMode === 'manual'"
+          (click)="addMode = 'manual'"
+        >
+          Manually
+        </button>
+      </div>
+
+      <div class="add-form">
+        <input
+          *ngIf="addMode === 'manual'"
+          type="text"
+          [(ngModel)]="newName"
+          placeholder="Developer name"
+        />
+        <input
+          type="email"
+          [(ngModel)]="newEmail"
+          placeholder="Developer email"
+        />
+        <button class="btn-add" (click)="addMember()">Add Member</button>
+      </div>
+
+      <div class="success-msg" *ngIf="addSuccess">✅ {{ addSuccess }}</div>
+      <div class="error-msg" *ngIf="addError">⚠️ {{ addError }}</div>
+
+      <!-- Members list -->
+      <div class="members-list">
+        <div class="member-card" *ngFor="let m of members">
+          <div class="member-avatar">
+            {{ getMemberInitial(m) }}
+          </div>
+          <div class="member-info">
+            <span class="member-name">{{ getMemberName(m) }}</span>
+            <span class="member-email">{{ m.developerEmail }}</span>
+          </div>
+          <span class="member-status" [class.invited]="m.status === 'INVITED'">
+            {{ m.status === "INVITED" ? "📨 Invited" : "✅ Active" }}
+          </span>
+        </div>
+
+        <div class="empty-state" *ngIf="members.length === 0">
+          No team members yet. Add developers above.
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ RIGHT — Tasks with assignment -->
+    <div class="tasks-panel">
+      <h3>Task Assignment</h3>
+
+      <table class="assign-table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of tasks">
+            <td class="task-name">{{ t.title }}</td>
+            <td>
+              <span class="badge" [ngClass]="getStatusClass(t.status)">
+                {{ t.status }}
+              </span>
+            </td>
+            <td>
+              <!-- Show assignees -->
+              <div class="assignees" *ngIf="t.assignees?.length > 0">
+                <span class="assignee-chip" *ngFor="let a of t.assignees">
+                  👤 {{ a.name }}
+                </span>
+              </div>
+              <span class="unassigned" *ngIf="!t.assignees?.length">
+                Unassigned
+              </span>
+            </td>
+            <td>
+              <button class="btn-assign" (click)="openAssignModal(t)">
+                {{ t.isAssigned ? "+ Add More" : "Assign" }}
+              </button>
+            </td>
+            <td>
+              <div class="assignees" *ngIf="t.assignees?.length > 0">
+                <span class="assignee-chip" *ngFor="let a of t.assignees">
+                  👤 {{ a.name }}
+                  <button
+                    class="btn-unassign"
+                    (click)="unassignTask(a.assignmentId, $event)"
+                    title="Remove"
+                  >
+                    ✕
+                  </button>
+                </span>
+              </div>
+              <span class="unassigned" *ngIf="!t.assignees?.length">
+                Unassigned
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Assign Modal -->
+<div
+  class="modal-overlay"
+  *ngIf="showAssignModal"
+  (click)="showAssignModal = false"
+>
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>Assign Task</h3>
+
+    <div class="success-msg" *ngIf="assignSuccess">✅ {{ assignSuccess }}</div>
+
+    <p class="modal-subtitle">Select a team member to assign:</p>
+
+    <div class="member-select">
+      <div
+        class="member-option"
+        *ngFor="let m of members"
+        [class.selected]="selectedMember === m"
+        (click)="selectMember(m)"
+      >
+        <div class="member-avatar small">
+          {{ getMemberInitial(m) }}
+        </div>
+        <div>
+          <div class="member-name">{{ getMemberName(m) }}</div>
+          <div class="member-email">{{ m.developerEmail }}</div>
+        </div>
+        <span class="check" *ngIf="selectedMember === m">✓</span>
+      </div>
+
+      <div class="empty-state" *ngIf="members.length === 0">
+        No team members. Add members first.
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="showAssignModal = false">
+        Cancel
+      </button>
+      <button
+        class="btn-save"
+        (click)="assignTask()"
+        [disabled]="!selectedMember"
+      >
+        Assign
+      </button>
+    </div>
+  </div>
+</div>
