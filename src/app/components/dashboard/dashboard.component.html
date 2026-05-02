@@ -1,5 +1,11 @@
 <div class="container" id="dashboard">
-  <h2>PlanovaAI Dashboard</h2>
+  <div class="dash-header">
+    <h2>PlanovaAI Dashboard</h2>
+    <div class="user-info">
+      <span>👤 {{ userName }}</span>
+      <button class="btn-logout" (click)="logout()">Logout</button>
+    </div>
+  </div>
 
   <div class="timeline-bar">
     <span>Start: {{ timelineSummary.start }}</span>
@@ -41,65 +47,122 @@
           <th>Duration</th>
           <th>Status</th>
           <th>Progress</th>
+          <th>Action</th>
         </tr>
       </thead>
 
       <tbody>
         <ng-container *ngFor="let t of tasks; let i = index">
-
-          <!-- ✅ Main task row -->
-          <tr class="task-row"
-              [class.has-subtasks]="getSubtasks(t.description).length > 0"
-              [class.expanded]="isExpanded(t.title)"
-              (click)="toggleTask(t.title)">
-
-            <!-- Expand icon -->
+          <!-- ✅ PARENT ROW — no progress, no edit button -->
+          <tr
+            class="task-row"
+            [class.has-subtasks]="getSubtasks(t.description).length > 0"
+            [class.expanded]="isExpanded(t.title)"
+            (click)="toggleTask(t.title)"
+          >
             <td class="expand-icon">
               <span *ngIf="getSubtasks(t.description).length > 0">
-                {{ isExpanded(t.title) ? '▼' : '▶' }}
+                {{ isExpanded(t.title) ? "▼" : "▶" }}
               </span>
             </td>
 
             <td class="task-title">
               <span class="task-name">{{ t.title }}</span>
-              <span class="task-count"
-                    *ngIf="getSubtasks(t.description).length > 0">
+              <span
+                class="task-count"
+                *ngIf="getSubtasks(t.description).length > 0"
+              >
                 {{ getSubtasks(t.description).length }} requirements
               </span>
             </td>
+
             <td>{{ t.startDate }}</td>
             <td>{{ t.endDate }}</td>
             <td>{{ t.duration }} days</td>
+
+            <!-- ✅ Parent status badge only -->
             <td>
-              <span class="badge" [ngClass]="(t.status || 'planned').toLowerCase()">
-                {{ t.status || 'Planned' }}
+              <span
+                class="badge"
+                [ngClass]="(t.status || 'planned').toLowerCase()"
+              >
+                {{ t.status || "Planned" }}
               </span>
             </td>
+
+            <!-- ✅ No progress slider on parent -->
             <td>
-              <div class="progress-wrap">
-                <div class="progress-bar">
-                  <div class="fill" [style.width.%]="t.progress || 0"></div>
+              <div class="parent-progress">
+                <div class="parent-bar">
+                  <div
+                    class="parent-fill"
+                    [style.width.%]="getParentProgress(t)"
+                  ></div>
                 </div>
-                <span>{{ t.progress || 0 }}%</span>
+                <span>{{ getParentProgress(t) }}%</span>
               </div>
             </td>
+
+            <!-- ✅ No edit on parent -->
+            <td></td>
           </tr>
 
-          <!-- ✅ Subtask rows — shown when expanded -->
+          <!-- ✅ SUBTASK ROWS — progress + edit here -->
           <ng-container *ngIf="isExpanded(t.title)">
-            <tr class="subtask-row"
-                *ngFor="let sub of getSubtasks(t.description); let j = index">
+            <tr
+              class="subtask-row"
+              *ngFor="let sub of getSubtasks(t.description); let j = index"
+            >
               <td></td>
-              <td class="subtask-title" colspan="1">
+
+              <td class="subtask-title">
                 <span class="subtask-index">{{ j + 1 }}</span>
-                {{ sub }}
+                <span class="subtask-text">{{ sub }}</span>
               </td>
-              <td colspan="5" class="subtask-meta">
-                <span class="sub-badge">{{ t.type || 'FR' }}</span>
+
+              <td colspan="2" class="subtask-dates">
+                <span class="sub-badge">{{ t.type || "FR" }}</span>
+              </td>
+
+              <td></td>
+
+              <!-- ✅ Status per subtask -->
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="(getSubStatus(t, j) || 'planned').toLowerCase()"
+                >
+                  {{ getSubStatus(t, j) || "Planned" }}
+                </span>
+              </td>
+
+              <!-- ✅ Progress slider on SUBTASK -->
+              <td>
+                <div class="progress-wrap">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    [value]="getSubProgress(t, j)"
+                    (change)="onSubProgressChange(t, j, $event)"
+                    class="progress-slider"
+                  />
+                  <span>{{ getSubProgress(t, j) }}%</span>
+                </div>
+              </td>
+
+              <!-- ✅ Edit button on SUBTASK -->
+              <td>
+                <button
+                  class="edit-btn"
+                  (click)="openSubModal(t, j); $event.stopPropagation()"
+                >
+                  ✏️ Edit
+                </button>
               </td>
             </tr>
           </ng-container>
-
         </ng-container>
       </tbody>
     </table>
@@ -108,5 +171,53 @@
   <div class="actions" *ngIf="tasks.length > 0">
     <button (click)="goToGantt()">View Gantt</button>
     <button (click)="goToTimeDebt()">View Time Debt</button>
+  </div>
+</div>
+
+<!-- ✅ MODAL -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>Update Requirement Progress</h3>
+
+    <div class="modal-task-name">{{ selectedTask?.subTitle }}</div>
+    <div class="modal-parent-name">{{ selectedTask?.title }}</div>
+
+    <div class="modal-field">
+      <label>Status</label>
+      <select [(ngModel)]="selectedTask.status">
+        <option value="Planned">Planned</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Done">Done</option>
+        <option value="Delayed">Delayed</option>
+      </select>
+    </div>
+
+    <div class="modal-field">
+      <label>Progress: {{ selectedTask?.progress }}%</label>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="5"
+        [(ngModel)]="selectedTask.progress"
+      />
+      <div class="progress-preview">
+        <div
+          class="preview-fill"
+          [style.width.%]="selectedTask?.progress"
+          [ngClass]="{
+            'fill-danger': selectedTask?.progress < 30,
+            'fill-warning':
+              selectedTask?.progress >= 30 && selectedTask?.progress < 70,
+            'fill-success': selectedTask?.progress >= 70,
+          }"
+        ></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="closeModal()">Cancel</button>
+      <button class="btn-save" (click)="saveModal()">Save</button>
+    </div>
   </div>
 </div>

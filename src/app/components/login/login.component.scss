@@ -1,0 +1,163 @@
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+  background: #f0f4ff;
+}
+
+.auth-card {
+  width: 440px;
+  min-height: 100vh;
+  background: white;
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.06);
+
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+
+    .logo-icon {
+      font-size: 40px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin: 8px 0 4px;
+    }
+
+    p {
+      color: #888;
+      font-size: 13px;
+    }
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 4px;
+  }
+
+  .auth-subtitle {
+    color: #888;
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+
+  .error-msg {
+    background: #fdecea;
+    color: #e53935;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    border-left: 4px solid #e53935;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #333;
+      outline: none;
+      box-sizing: border-box;
+      transition: border 0.2s;
+
+      &:focus {
+        border-color: #4e85f4;
+      }
+      &::placeholder {
+        color: #bbb;
+      }
+    }
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: #4e85f4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #3b6fd4;
+    }
+    &:disabled {
+      background: #a0b8f8;
+      cursor: not-allowed;
+    }
+  }
+
+  .auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #888;
+
+    a {
+      color: #4e85f4;
+      font-weight: 600;
+      text-decoration: none;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// ✅ Right side background panel
+.auth-bg {
+  flex: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+  gap: 20px;
+
+  .bg-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 20px 24px;
+    max-width: 380px;
+    width: 100%;
+
+    h3 {
+      color: white;
+      font-size: 16px;
+      margin: 0 0 8px;
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+}
