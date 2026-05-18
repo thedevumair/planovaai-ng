@@ -1,0 +1,97 @@
+<div class="dev-container">
+  <div class="dev-header">
+    <button class="back-btn" (click)="goBack()">← Back</button>
+    <h2>📋 My Assigned Tasks</h2>
+    <span class="project-name" *ngIf="project">{{ project.projectName }}</span>
+  </div>
+
+  <div *ngIf="loading" class="loading">Loading your tasks...</div>
+
+  <div class="empty-state" *ngIf="!loading && assignments.length === 0">
+    <p>📭 No tasks assigned to you yet.</p>
+    <p>Your Team Lead will assign tasks soon.</p>
+  </div>
+
+  <div class="task-list" *ngIf="!loading && assignments.length > 0">
+    <div class="task-card" *ngFor="let a of assignments">
+      <!-- Task Header -->
+      <div class="task-header">
+        <div class="task-info">
+          <span class="task-type" [class.nfr]="a.type === 'NFR'">
+            {{ a.type || "FR" }}
+          </span>
+          <h4>{{ a.taskTitle || "Task" }}</h4>
+        </div>
+        <span class="badge" [ngClass]="getStatusClass(a.status)">
+          {{ getStatusLabel(a.status) }}
+        </span>
+      </div>
+
+      <!-- Task Meta -->
+      <div class="task-meta">
+        <span>📅 Assigned: {{ a.assignedAt | date: "mediumDate" }}</span>
+        <span>👑 By: {{ a.assignedByName || "Team Lead" }}</span>
+        <span *ngIf="a.startDate">🗓 Start: {{ a.startDate }}</span>
+        <span *ngIf="a.endDate">🏁 Due: {{ a.endDate }}</span>
+      </div>
+
+      <!-- Status Selector -->
+      <div class="status-selector">
+        <label>Update Status:</label>
+        <div class="status-options">
+          <button
+            [class.active]="a.status === 'TODO'"
+            (click)="a.status = 'TODO'; onStatusChange(a)"
+          >
+            📋 To Do
+          </button>
+          <button
+            [class.active]="a.status === 'IN_PROGRESS'"
+            (click)="a.status = 'IN_PROGRESS'; onStatusChange(a)"
+          >
+            🔄 In Progress
+          </button>
+          <button
+            [class.active]="a.status === 'DONE'"
+            (click)="a.status = 'DONE'; onStatusChange(a)"
+          >
+            ✅ Done
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress Slider -->
+      <div class="progress-section">
+        <div class="progress-label">
+          <span>Progress</span>
+          <span class="progress-value">{{ a.progress || 0 }}%</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          [(ngModel)]="a.progress"
+          (change)="onProgressChange(a)"
+          class="progress-slider"
+        />
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            [style.width.%]="a.progress || 0"
+            [ngClass]="{
+              'fill-todo': (a.progress || 0) === 0,
+              'fill-progress': (a.progress || 0) > 0 && (a.progress || 0) < 100,
+              'fill-done': (a.progress || 0) === 100,
+            }"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Saving indicator -->
+      <div class="saving-indicator" *ngIf="saving === a.assignmentId">
+        💾 Saving...
+      </div>
+    </div>
+  </div>
+</div>

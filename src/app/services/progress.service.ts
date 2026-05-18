@@ -18,4 +18,8 @@ export class ProgressService {
     // JWT interceptor handles auth header
     return this.http.get(`${this.api}/my-tasks`);
   }
+
+  getProjectSummary(projectId: string): Observable<any> {
+    return this.http.get(`${this.api}/project-summary/${projectId}`);
+  }
 }

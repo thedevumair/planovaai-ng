@@ -8,6 +8,7 @@ import jsPDF from 'jspdf';
 import { GanttService } from '../../services/gantt.service';
 import { ProgressService } from '../../services/progress.service';
 import { AuthServiceService } from '../../services/auth-service.service';
+import { TeamService } from '../../services/team/team.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,7 +38,10 @@ export class DashboardComponent implements OnInit {
     weeks: 0,
   };
 
+  isTeamLead: boolean = false;
+  developerProjects: any[] = [];
   private readonly SUB_PROGRESS_KEY = 'planova_sub_progress';
+  projectSummary: any = null;
 
   constructor(
     private uploadService: UploadService,
@@ -45,15 +49,27 @@ export class DashboardComponent implements OnInit {
     private ganttService: GanttService,
     private progressService: ProgressService,
     private authService: AuthServiceService,
+    private teamService: TeamService,
   ) {}
 
   ngOnInit(): void {
     this.userName = this.authService.getUserName();
+    const role = this.authService.getRole();
+    this.isTeamLead = role === 'TEAM_LEAD';
 
+    if (this.isTeamLead) {
+      this.loadTeamLeadDashboard();
+    } else {
+      this.loadDeveloperDashboard();
+    }
+  }
+
+  loadTeamLeadDashboard() {
     const savedTasks = this.ganttService.getTasks();
     const savedModel = this.ganttService.getModel();
 
-    if (savedTasks.length > 0) {
+    if (savedTasks.length > 0 && this.ganttService.getProjectId()) {
+      this.tasks = this.sortTasksByDate(savedTasks);
       this.tasks = savedTasks;
       this.model = savedModel;
       this.totalDuration = this.tasks.reduce(
@@ -61,13 +77,19 @@ export class DashboardComponent implements OnInit {
         0,
       );
       this.calculateTimeline();
-      this.restoreSubProgress(); // ✅ restore subtask progress
+      this.restoreSubProgress();
+      this.loadProjectSummary();
       return;
     }
 
+    // ✅ Always load projectId from DB
     this.progressService.getMyTasks().subscribe({
       next: (res: any) => {
+        if (res.projectId) {
+          this.ganttService.setProjectId(res.projectId); // ✅ from DB
+        }
         if (res.tasks?.length > 0) {
+          this.tasks = this.sortTasksByDate(savedTasks);
           this.tasks = res.tasks;
           this.model = res.model || '';
           this.totalDuration = this.tasks.reduce(
@@ -77,10 +99,28 @@ export class DashboardComponent implements OnInit {
           this.calculateTimeline();
           this.ganttService.setTasks(this.tasks);
           this.ganttService.setModel(this.model);
-          this.restoreSubProgress(); // ✅ restore after DB load too
+          this.restoreSubProgress();
+          this.loadProjectSummary();
         }
       },
       error: (e) => console.warn('Could not load from DB:', e),
+    });
+  }
+
+  loadDeveloperDashboard() {
+    this.teamService.getMyProjects().subscribe({
+      next: (res: any) => {
+        this.developerProjects = res;
+        console.log('✅ Developer projects:', res);
+      },
+      error: (e) => console.warn('Could not load developer projects:', e),
+    });
+  }
+
+  openDeveloperProject(project: any) {
+    localStorage.setItem('planova_project_id', project.projectId);
+    this.router.navigate(['/developer-tasks'], {
+      state: { project },
     });
   }
 
@@ -99,10 +139,17 @@ export class DashboardComponent implements OnInit {
     this.uploadService.uploadSRS(this.selectedFile).subscribe({
       next: (res: any) => {
         this.model = res.model;
-        this.tasks = res.ganttTask || [];
+
+        // ✅ Sort tasks by start date
+        this.tasks = this.sortTasksByDate(res.ganttTask || []);
 
         if (res.projectId) {
-          localStorage.setItem('planova_project_id', res.projectId);
+          this.ganttService.setProjectId(res.projectId);
+        }
+
+        if (res.role === 'TEAM_LEAD') {
+          localStorage.setItem('userRole', 'TEAM_LEAD');
+          this.isTeamLead = true;
         }
 
         this.totalDuration = this.tasks.reduce(
@@ -112,7 +159,6 @@ export class DashboardComponent implements OnInit {
 
         this.calculateTimeline();
         this.loading = false;
-
         this.ganttService.setTasks(this.tasks);
         this.ganttService.setModel(this.model);
       },
@@ -137,15 +183,17 @@ export class DashboardComponent implements OnInit {
     this.expandedTasks.clear();
     this.subTaskProgress.clear();
     this.ganttService.clearAll();
-    localStorage.removeItem(this.SUB_PROGRESS_KEY); // ✅ clear sub progress too
+    localStorage.removeItem(this.SUB_PROGRESS_KEY);
   }
 
   goToGantt() {
     this.router.navigate(['/gantt']);
   }
-
   goToTimeDebt() {
     this.router.navigate(['/time-debt']);
+  }
+  goToTeam() {
+    this.router.navigate(['/team']);
   }
 
   calculateTimeline() {
@@ -241,7 +289,7 @@ export class DashboardComponent implements OnInit {
       .subscribe({ error: (e) => console.error('Save failed', e) });
 
     this.ganttService.setTasks(this.tasks);
-    this.saveSubProgress(); // ✅ save subtask progress
+    this.saveSubProgress();
   }
 
   getParentProgress(task: any): number {
@@ -297,11 +345,10 @@ export class DashboardComponent implements OnInit {
       .subscribe({ error: (e) => console.error('Save failed', e) });
 
     this.ganttService.setTasks(this.tasks);
-    this.saveSubProgress(); // ✅ save subtask progress
+    this.saveSubProgress();
     this.closeModal();
   }
 
-  // ✅ Save subTaskProgress to localStorage
   saveSubProgress(): void {
     const obj: any = {};
     this.subTaskProgress.forEach((innerMap, title) => {
@@ -313,7 +360,6 @@ export class DashboardComponent implements OnInit {
     localStorage.setItem(this.SUB_PROGRESS_KEY, JSON.stringify(obj));
   }
 
-  // ✅ Restore subTaskProgress from localStorage
   restoreSubProgress(): void {
     const stored = localStorage.getItem(this.SUB_PROGRESS_KEY);
     if (!stored) return;
@@ -332,7 +378,6 @@ export class DashboardComponent implements OnInit {
         this.subTaskProgress.set(title, innerMap);
       });
 
-      // ✅ Restore parent progress from subtasks
       this.tasks.forEach((task) => {
         if (this.subTaskProgress.has(task.title)) {
           this.updateParentProgress(task);
@@ -343,8 +388,51 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  goToTeam() {
-    this.router.navigate(['/team']);
+  // Add this method
+  sortTasksByDate(tasks: any[]): any[] {
+    return [...tasks].sort(
+      (a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    );
+  }
+
+  loadProjectSummary() {
+    const projectId = this.ganttService.getProjectId();
+    if (!projectId) return;
+
+    this.progressService.getProjectSummary(projectId).subscribe({
+      next: (res: any) => {
+        this.projectSummary = res;
+        console.log('✅ Project summary:', res);
+      },
+      error: (e) => console.warn('Could not load summary:', e),
+    });
+  }
+
+  getHealthClass(health: string): string {
+    switch (health) {
+      case 'ON_TRACK':
+        return 'health-good';
+      case 'AT_RISK':
+        return 'health-risk';
+      case 'BEHIND':
+        return 'health-bad';
+      default:
+        return '';
+    }
+  }
+
+  getHealthLabel(health: string): string {
+    switch (health) {
+      case 'ON_TRACK':
+        return '✅ On Track';
+      case 'AT_RISK':
+        return '⚠️ At Risk';
+      case 'BEHIND':
+        return '🔴 Behind Schedule';
+      default:
+        return '---';
+    }
   }
 
   closeModal() {

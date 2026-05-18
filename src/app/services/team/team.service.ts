@@ -59,4 +59,29 @@ export class TeamService {
   unassignTask(assignmentId: string): Observable<any> {
     return this.http.delete(`${this.api}/assign/${assignmentId}`);
   }
+
+  getMyProjects(): Observable<any> {
+    return this.http.get(`${this.api}/my-projects`);
+  }
+
+  getMyAssignedTasks(): Observable<any> {
+    return this.http.get(`${this.api}/assignments/my`);
+  }
+
+  updateAssignment(
+    assignmentId: string,
+    progress: number,
+    status: string,
+  ): Observable<any> {
+    return this.http.put(`${this.api}/assignments/${assignmentId}`, {
+      progress,
+      status,
+    });
+  }
+
+  getGitHubStats(projectId: string): Observable<any> {
+    return this.http.get(
+      `http://localhost:8080/api/github/stats/project/${projectId}`,
+    );
+  }
 }

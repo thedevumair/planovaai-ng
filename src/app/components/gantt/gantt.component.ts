@@ -35,7 +35,13 @@ export class GanttComponent implements OnInit {
       return;
     }
 
-    this.tasks = raw.map((t: any, index: number) => ({
+    // ✅ Sort by start date before mapping
+    const sorted = [...raw].sort(
+      (a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    );
+
+    this.tasks = sorted.map((t: any, index: number) => ({
       id: t.id || `task_${index}`,
       name: this.cleanTitle(t.title),
       start: t.startDate,
@@ -44,7 +50,7 @@ export class GanttComponent implements OnInit {
       dependencies: t.dependsOn ?? '',
     }));
 
-    setTimeout(() => this.renderGantt(), 500);
+    setTimeout(() => this.renderGantt(), 100);
   }
 
   cleanTitle(title: string): string {
@@ -56,28 +62,28 @@ export class GanttComponent implements OnInit {
   }
 
   renderGantt(): void {
-  if (!isPlatformBrowser(this.platformId) || !this.tasks.length) return;
+    if (!isPlatformBrowser(this.platformId) || !this.tasks.length) return;
 
-  const container = this.ganttContainer.nativeElement;
-  container.innerHTML = '';
+    const container = this.ganttContainer.nativeElement;
+    container.innerHTML = '';
 
-  try {
-    this.gantt = new Gantt(container, this.tasks, {
-      view_mode: 'Week',
-      date_format: 'YYYY-MM-DD',
-      bar_height: 30,
-      bar_corner_radius: 3,
-      arrow_curve: 5,
-      padding: 18,
-      on_click: (task: any) => console.log('Clicked:', task),
-      on_date_change: (task: any, start: any, end: any) =>
-        console.log('Date changed:', task, start, end),
-      on_progress_change: (task: any, progress: any) =>
-        console.log('Progress:', progress),
-      on_view_change: (mode: any) => console.log('View:', mode),
-    });
-  } catch (e) {
-    console.error('❌ Gantt failed:', e);
+    try {
+      this.gantt = new Gantt(container, this.tasks, {
+        view_mode: 'Week',
+        date_format: 'YYYY-MM-DD',
+        bar_height: 30,
+        bar_corner_radius: 3,
+        arrow_curve: 5,
+        padding: 18,
+        on_click: (task: any) => console.log('Clicked:', task),
+        on_date_change: (task: any, start: any, end: any) =>
+          console.log('Date changed:', task, start, end),
+        on_progress_change: (task: any, progress: any) =>
+          console.log('Progress:', progress),
+        on_view_change: (mode: any) => console.log('View:', mode),
+      });
+    } catch (e) {
+      console.error('❌ Gantt failed:', e);
+    }
   }
-}
 }

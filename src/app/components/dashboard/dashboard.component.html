@@ -2,177 +2,356 @@
   <div class="dash-header">
     <h2>PlanovaAI Dashboard</h2>
     <div class="user-info">
-      <span>👤 {{ userName }}</span>
+      <span class="role-badge" [class.lead]="isTeamLead">
+        {{ isTeamLead ? "👑 Team Lead" : "👨‍💻 Developer" }}
+      </span>
+      <span>{{ userName }}</span>
       <button class="btn-logout" (click)="logout()">Logout</button>
     </div>
   </div>
 
-  <div class="timeline-bar">
-    <span>Start: {{ timelineSummary.start }}</span>
-    <span>End: {{ timelineSummary.end }}</span>
-    <span>{{ timelineSummary.totalDays }} Days</span>
-    <span>{{ timelineSummary.weeks }} Weeks</span>
-  </div>
-
-  <div class="top-panel">
-    <div class="card">
-      <h3>Upload SRS</h3>
-      <input type="file" (change)="onFileSelected($event)" />
-      <button (click)="upload()">Generate Plan</button>
-      <p *ngIf="loading">Processing AI...</p>
+  <!-- ✅ TEAM LEAD VIEW -->
+  <ng-container *ngIf="isTeamLead">
+    <div class="timeline-bar" *ngIf="timelineSummary.totalDays > 0">
+      <span>Start: {{ timelineSummary.start }}</span>
+      <span>End: {{ timelineSummary.end }}</span>
+      <span>{{ timelineSummary.totalDays }} Days</span>
+      <span>{{ timelineSummary.weeks }} Weeks</span>
     </div>
-    <div class="card">
-      <h3>Suggested Model</h3>
-      <p class="model">{{ model || "---" }}</p>
-    </div>
-    <div class="card">
-      <h3>Project Stats</h3>
-      <p>Total Tasks: {{ tasks.length }}</p>
-      <p>Total Duration: {{ totalDuration }} days</p>
-    </div>
-  </div>
 
-  <button (click)="exportPDF()">Export PDF</button>
+    <!-- ✅ PROJECT PROGRESS SUMMARY -->
+    <div class="project-summary" *ngIf="projectSummary">
+      <!-- ✅ Health Banner -->
+      <div
+        class="health-banner"
+        [ngClass]="getHealthClass(projectSummary.health)"
+      >
+        <span class="health-label">{{
+          getHealthLabel(projectSummary.health)
+        }}</span>
+        <span class="health-detail">
+          Expected: {{ projectSummary.expectedProgress }}% | Actual:
+          {{ projectSummary.avgProgress }}%
+        </span>
+      </div>
 
-  <div class="card" *ngIf="tasks.length > 0">
-    <h3>Task Breakdown</h3>
+      <!-- ✅ Summary Cards -->
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="card-icon">🚀</div>
+          <div class="card-body">
+            <div class="card-value">{{ projectSummary.projectStart }}</div>
+            <div class="card-label">Planned Start</div>
+          </div>
+        </div>
 
-    <table class="task-table">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Task</th>
-          <th>Start</th>
-          <th>End</th>
-          <th>Duration</th>
-          <th>Status</th>
-          <th>Progress</th>
-          <th>Action</th>
-        </tr>
-      </thead>
+        <div class="summary-card">
+          <div class="card-icon">🏁</div>
+          <div class="card-body">
+            <div class="card-value">{{ projectSummary.projectEnd }}</div>
+            <div class="card-label">Planned End</div>
+          </div>
+        </div>
 
-      <tbody>
-        <ng-container *ngFor="let t of tasks; let i = index">
-          <!-- ✅ PARENT ROW — no progress, no edit button -->
-          <tr
-            class="task-row"
-            [class.has-subtasks]="getSubtasks(t.description).length > 0"
-            [class.expanded]="isExpanded(t.title)"
-            (click)="toggleTask(t.title)"
+        <div class="summary-card" *ngIf="projectSummary.actualStart">
+          <div class="card-icon">▶️</div>
+          <div class="card-body">
+            <div class="card-value">{{ projectSummary.actualStart }}</div>
+            <div class="card-label">Actual Start</div>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="card-icon">📅</div>
+          <div class="card-body">
+            <div class="card-value">{{ projectSummary.daysElapsed }}</div>
+            <div class="card-label">Days Elapsed</div>
+          </div>
+        </div>
+
+        <div class="summary-card" [class.urgent]="projectSummary.daysLeft <= 7">
+          <div class="card-icon">⏳</div>
+          <div class="card-body">
+            <div class="card-value">{{ projectSummary.daysLeft }}</div>
+            <div class="card-label">Days Left</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Overall Progress Bar -->
+      <div class="overall-progress">
+        <div class="progress-header">
+          <span class="progress-title">Overall Project Progress</span>
+          <span class="progress-pct">{{ projectSummary.avgProgress }}%</span>
+        </div>
+
+        <!-- Actual progress -->
+        <div class="progress-track">
+          <div
+            class="progress-actual"
+            [style.width.%]="projectSummary.avgProgress"
+            [ngClass]="getHealthClass(projectSummary.health)"
+          ></div>
+          <!-- Expected marker -->
+          <div
+            class="progress-expected-marker"
+            [style.left.%]="projectSummary.expectedProgress"
+            title="Expected: {{ projectSummary.expectedProgress }}%"
+          ></div>
+        </div>
+
+        <div class="progress-legend">
+          <span class="legend-actual"
+            >■ Actual ({{ projectSummary.avgProgress }}%)</span
           >
-            <td class="expand-icon">
-              <span *ngIf="getSubtasks(t.description).length > 0">
-                {{ isExpanded(t.title) ? "▼" : "▶" }}
-              </span>
-            </td>
+          <span class="legend-expected">
+            | Expected ({{ projectSummary.expectedProgress }}%)
+          </span>
+        </div>
+      </div>
 
-            <td class="task-title">
-              <span class="task-name">{{ t.title }}</span>
-              <span
-                class="task-count"
-                *ngIf="getSubtasks(t.description).length > 0"
-              >
-                {{ getSubtasks(t.description).length }} requirements
-              </span>
-            </td>
+      <!-- ✅ Task Status Breakdown -->
+      <div class="task-status-row">
+        <div class="status-pill done">
+          ✅ Done: {{ projectSummary.doneTasks }}
+        </div>
+        <div class="status-pill progress">
+          🔄 In Progress: {{ projectSummary.inProgressTasks }}
+        </div>
+        <div class="status-pill planned">
+          📋 Planned: {{ projectSummary.plannedTasks }}
+        </div>
+        <div
+          class="status-pill delayed"
+          *ngIf="projectSummary.delayedTasks > 0"
+        >
+          ⚠️ Delayed: {{ projectSummary.delayedTasks }}
+        </div>
+      </div>
+    </div>
 
-            <td>{{ t.startDate }}</td>
-            <td>{{ t.endDate }}</td>
-            <td>{{ t.duration }} days</td>
+    <div class="top-panel">
+      <div class="card">
+        <h3>Upload SRS</h3>
+        <input type="file" (change)="onFileSelected($event)" />
+        <div class="btn-group">
+          <button (click)="upload()">Generate Plan</button>
+          <button
+            class="btn-clear"
+            (click)="clearAnalysis()"
+            *ngIf="tasks.length > 0"
+          >
+            🗑 New Analysis
+          </button>
+        </div>
+        <p *ngIf="loading">⏳ Processing AI...</p>
+      </div>
+      <div class="card">
+        <h3>Suggested Model</h3>
+        <p class="model">{{ model || "---" }}</p>
+      </div>
+      <div class="card">
+        <h3>Project Stats</h3>
+        <p>Total Tasks: {{ tasks.length }}</p>
+        <p>Total Duration: {{ totalDuration }} days</p>
+      </div>
+    </div>
 
-            <!-- ✅ Parent status badge only -->
-            <td>
-              <span
-                class="badge"
-                [ngClass]="(t.status || 'planned').toLowerCase()"
-              >
-                {{ t.status || "Planned" }}
-              </span>
-            </td>
+    <button (click)="exportPDF()">Export PDF</button>
 
-            <!-- ✅ No progress slider on parent -->
-            <td>
-              <div class="parent-progress">
-                <div class="parent-bar">
-                  <div
-                    class="parent-fill"
-                    [style.width.%]="getParentProgress(t)"
-                  ></div>
-                </div>
-                <span>{{ getParentProgress(t) }}%</span>
-              </div>
-            </td>
+    <!-- ✅ TASK TABLE -->
+    <div class="card" *ngIf="tasks.length > 0">
+      <h3>Task Breakdown</h3>
 
-            <!-- ✅ No edit on parent -->
-            <td></td>
+      <table class="task-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Task</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Action</th>
           </tr>
+        </thead>
 
-          <!-- ✅ SUBTASK ROWS — progress + edit here -->
-          <ng-container *ngIf="isExpanded(t.title)">
+        <tbody>
+          <ng-container *ngFor="let t of tasks; let i = index">
+            <!-- ✅ PARENT ROW -->
             <tr
-              class="subtask-row"
-              *ngFor="let sub of getSubtasks(t.description); let j = index"
+              class="task-row"
+              [class.has-subtasks]="getSubtasks(t.description).length > 0"
+              [class.expanded]="isExpanded(t.title)"
+              (click)="toggleTask(t.title)"
             >
-              <td></td>
-
-              <td class="subtask-title">
-                <span class="subtask-index">{{ j + 1 }}</span>
-                <span class="subtask-text">{{ sub }}</span>
-              </td>
-
-              <td colspan="2" class="subtask-dates">
-                <span class="sub-badge">{{ t.type || "FR" }}</span>
-              </td>
-
-              <td></td>
-
-              <!-- ✅ Status per subtask -->
-              <td>
-                <span
-                  class="badge"
-                  [ngClass]="(getSubStatus(t, j) || 'planned').toLowerCase()"
-                >
-                  {{ getSubStatus(t, j) || "Planned" }}
+              <td class="expand-icon">
+                <span *ngIf="getSubtasks(t.description).length > 0">
+                  {{ isExpanded(t.title) ? "▼" : "▶" }}
                 </span>
               </td>
 
-              <!-- ✅ Progress slider on SUBTASK -->
+              <td class="task-title">
+                <span class="task-name">{{ t.title }}</span>
+                <span
+                  class="task-count"
+                  *ngIf="getSubtasks(t.description).length > 0"
+                >
+                  {{ getSubtasks(t.description).length }} requirements
+                </span>
+              </td>
+
+              <td>{{ t.startDate }}</td>
+              <td>{{ t.endDate }}</td>
+              <td>{{ t.duration }} days</td>
+
               <td>
-                <div class="progress-wrap">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="5"
-                    [value]="getSubProgress(t, j)"
-                    (change)="onSubProgressChange(t, j, $event)"
-                    class="progress-slider"
-                  />
-                  <span>{{ getSubProgress(t, j) }}%</span>
+                <span
+                  class="badge"
+                  [ngClass]="(t.status || 'planned').toLowerCase()"
+                >
+                  {{ t.status || "Planned" }}
+                </span>
+              </td>
+
+              <td>
+                <div class="parent-progress">
+                  <div class="parent-bar">
+                    <div
+                      class="parent-fill"
+                      [style.width.%]="getParentProgress(t)"
+                    ></div>
+                  </div>
+                  <span>{{ getParentProgress(t) }}%</span>
                 </div>
               </td>
 
-              <!-- ✅ Edit button on SUBTASK -->
-              <td>
-                <button
-                  class="edit-btn"
-                  (click)="openSubModal(t, j); $event.stopPropagation()"
-                >
-                  ✏️ Edit
-                </button>
-              </td>
+              <td></td>
             </tr>
-          </ng-container>
-        </ng-container>
-      </tbody>
-    </table>
-  </div>
 
-  <div class="actions" *ngIf="tasks.length > 0">
-    <button (click)="goToGantt()">View Gantt</button>
-    <button (click)="goToTimeDebt()">View Time Debt</button>
-    <button (click)="goToTeam()">👥 Team</button>
-  </div>
+            <!-- ✅ SUBTASK ROWS -->
+            <ng-container *ngIf="isExpanded(t.title)">
+              <tr
+                class="subtask-row"
+                *ngFor="let sub of getSubtasks(t.description); let j = index"
+              >
+                <td></td>
+
+                <td class="subtask-title">
+                  <span class="subtask-index">{{ j + 1 }}</span>
+                  <span class="subtask-text">{{ sub }}</span>
+                </td>
+
+                <td colspan="2" class="subtask-dates">
+                  <span class="sub-badge">{{ t.type || "FR" }}</span>
+                </td>
+
+                <td></td>
+
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="(getSubStatus(t, j) || 'planned').toLowerCase()"
+                  >
+                    {{ getSubStatus(t, j) || "Planned" }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="progress-wrap">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      [value]="getSubProgress(t, j)"
+                      (change)="onSubProgressChange(t, j, $event)"
+                      class="progress-slider"
+                    />
+                    <span>{{ getSubProgress(t, j) }}%</span>
+                  </div>
+                </td>
+
+                <td>
+                  <button
+                    class="edit-btn"
+                    (click)="openSubModal(t, j); $event.stopPropagation()"
+                  >
+                    ✏️ Edit
+                  </button>
+                </td>
+              </tr>
+            </ng-container>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="actions" *ngIf="tasks.length > 0">
+      <button (click)="goToGantt()">View Gantt</button>
+      <button (click)="goToTimeDebt()">View Time Debt</button>
+      <button (click)="goToTeam()">👥 Team</button>
+    </div>
+  </ng-container>
+
+  <!-- ✅ DEVELOPER VIEW -->
+  <ng-container *ngIf="!isTeamLead">
+    <div class="dev-welcome">
+      <h3>👨‍💻 Welcome to PlanovaAI</h3>
+    </div>
+
+    <!-- ✅ If no projects assigned yet — show upload option -->
+    <div class="dev-empty" *ngIf="developerProjects.length === 0">
+      <div class="empty-icon">🚀</div>
+      <h4>Get Started</h4>
+      <p>You can either:</p>
+      <div class="start-options">
+        <div class="start-option">
+          <h5>📤 Upload an SRS</h5>
+          <p>Become a Team Lead and generate a project plan</p>
+          <div class="upload-inline">
+            <input type="file" (change)="onFileSelected($event)" />
+            <button (click)="upload()" [disabled]="loading">
+              {{ loading ? "⏳ Processing..." : "Generate Plan" }}
+            </button>
+          </div>
+        </div>
+        <div class="divider">OR</div>
+        <div class="start-option">
+          <h5>👥 Wait for invitation</h5>
+          <p>Ask your Team Lead to add you to a project</p>
+          <button class="btn-refresh" (click)="loadDeveloperDashboard()">
+            🔄 Refresh Projects
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Show assigned projects -->
+    <div class="project-cards" *ngIf="developerProjects.length > 0">
+      <div
+        class="project-card"
+        *ngFor="let p of developerProjects"
+        (click)="openDeveloperProject(p)"
+      >
+        <div class="project-icon">📁</div>
+        <div class="project-info">
+          <h4>{{ p.projectName }}</h4>
+          <p>{{ p.description }}</p>
+          <span class="assigned-count">
+            📋 {{ p.assignedTasks }} tasks assigned to you
+          </span>
+        </div>
+        <span
+          class="project-status"
+          [class.invited]="p.memberStatus === 'INVITED'"
+        >
+          {{ p.memberStatus === "INVITED" ? "📨 Invited" : "✅ Active" }}
+        </span>
+      </div>
+    </div>
+  </ng-container>
 </div>
 
 <!-- ✅ MODAL -->

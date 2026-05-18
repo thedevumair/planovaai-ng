@@ -18,22 +18,17 @@ export class RegisterComponent {
   loading = false;
   error = '';
 
-  constructor(
-    private authService: AuthServiceService,
-    private router: Router,
-  ) {}
+  constructor(private authService: AuthServiceService, private router: Router) {}
 
   register() {
     if (!this.name || !this.email || !this.password || !this.confirmPassword) {
       this.error = 'Please fill in all fields';
       return;
     }
-
     if (this.password !== this.confirmPassword) {
       this.error = 'Passwords do not match';
       return;
     }
-
     if (this.password.length < 6) {
       this.error = 'Password must be at least 6 characters';
       return;
@@ -42,6 +37,7 @@ export class RegisterComponent {
     this.loading = true;
     this.error = '';
 
+    // ✅ No role — everyone starts as DEVELOPER
     this.authService.register(this.name, this.email, this.password).subscribe({
       next: (res: any) => {
         this.authService.saveSession(res);
@@ -50,7 +46,7 @@ export class RegisterComponent {
       error: (err) => {
         this.error = err.error?.error || 'Registration failed';
         this.loading = false;
-      },
+      }
     });
   }
 }

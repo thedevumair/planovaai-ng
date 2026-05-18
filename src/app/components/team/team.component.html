@@ -10,7 +10,6 @@
     <div class="team-panel">
       <h3>Team Members</h3>
 
-      <!-- Add mode toggle -->
       <div class="mode-toggle">
         <button
           [class.active]="addMode === 'email'"
@@ -44,12 +43,9 @@
       <div class="success-msg" *ngIf="addSuccess">✅ {{ addSuccess }}</div>
       <div class="error-msg" *ngIf="addError">⚠️ {{ addError }}</div>
 
-      <!-- Members list -->
       <div class="members-list">
         <div class="member-card" *ngFor="let m of members">
-          <div class="member-avatar">
-            {{ getMemberInitial(m) }}
-          </div>
+          <div class="member-avatar">{{ getMemberInitial(m) }}</div>
           <div class="member-info">
             <span class="member-name">{{ getMemberName(m) }}</span>
             <span class="member-email">{{ m.developerEmail }}</span>
@@ -81,52 +77,157 @@
         <tbody>
           <tr *ngFor="let t of tasks">
             <td class="task-name">{{ t.title }}</td>
+
             <td>
               <span class="badge" [ngClass]="getStatusClass(t.status)">
                 {{ t.status }}
               </span>
             </td>
+
+            <!-- ✅ Single assignees column with progress -->
             <td>
-              <!-- Show assignees -->
               <div class="assignees" *ngIf="t.assignees?.length > 0">
-                <span class="assignee-chip" *ngFor="let a of t.assignees">
-                  👤 {{ a.name }}
-                </span>
+                <div class="assignee-item" *ngFor="let a of t.assignees">
+                  <div class="assignee-top">
+                    <span class="assignee-chip">
+                      👤 {{ a.name }}
+                      <button
+                        class="btn-unassign"
+                        (click)="unassignTask(a.assignmentId, $event)"
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                    <span
+                      class="dev-status"
+                      [ngClass]="{
+                        'status-todo': a.status === 'TODO',
+                        'status-progress': a.status === 'IN_PROGRESS',
+                        'status-done': a.status === 'DONE',
+                      }"
+                    >
+                      {{
+                        a.status === "TODO"
+                          ? "📋 To Do"
+                          : a.status === "IN_PROGRESS"
+                            ? "🔄 In Progress"
+                            : "✅ Done"
+                      }}
+                    </span>
+                  </div>
+                  <div class="dev-progress-bar">
+                    <div
+                      class="dev-progress-fill"
+                      [style.width.%]="a.progress || 0"
+                      [ngClass]="{
+                        'fill-todo': (a.progress || 0) === 0,
+                        'fill-progress':
+                          (a.progress || 0) > 0 && (a.progress || 0) < 100,
+                        'fill-done': (a.progress || 0) === 100,
+                      }"
+                    ></div>
+                  </div>
+                  <span class="dev-progress-label">{{ a.progress || 0 }}%</span>
+                </div>
               </div>
               <span class="unassigned" *ngIf="!t.assignees?.length">
                 Unassigned
               </span>
             </td>
+
             <td>
               <button class="btn-assign" (click)="openAssignModal(t)">
                 {{ t.isAssigned ? "+ Add More" : "Assign" }}
               </button>
-            </td>
-            <td>
-              <div class="assignees" *ngIf="t.assignees?.length > 0">
-                <span class="assignee-chip" *ngFor="let a of t.assignees">
-                  👤 {{ a.name }}
-                  <button
-                    class="btn-unassign"
-                    (click)="unassignTask(a.assignmentId, $event)"
-                    title="Remove"
-                  >
-                    ✕
-                  </button>
-                </span>
-              </div>
-              <span class="unassigned" *ngIf="!t.assignees?.length">
-                Unassigned
-              </span>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+
+  <!-- ✅ GITHUB ACTIVITY STATS — inside team-container -->
+  <div class="github-stats" *ngIf="devStats.length > 0">
+    <h3>📊 Developer Activity (GitHub)</h3>
+
+    <div class="dev-stat-cards">
+      <div
+        class="dev-stat-card"
+        *ngFor="let d of devStats"
+        [ngClass]="getRiskClass(d.riskLevel)"
+      >
+        <div class="stat-header">
+          <div class="dev-avatar">
+            {{ (d.name || d.email)[0].toUpperCase() }}
+          </div>
+          <div class="dev-info">
+            <span class="dev-name">{{ d.name || d.email }}</span>
+            <span class="dev-email">{{ d.email }}</span>
+          </div>
+          <span class="risk-badge" [ngClass]="getRiskClass(d.riskLevel)">
+            {{ getRiskLabel(d.riskLevel) }}
+          </span>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-value">{{ d.totalCommits }}</div>
+            <div class="stat-label">Commits</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ d.totalLinesAdded }}</div>
+            <div class="stat-label">Lines Added</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ d.commitFrequency }}/day</div>
+            <div class="stat-label">Frequency</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ d.avgProgress }}%</div>
+            <div class="stat-label">Progress</div>
+          </div>
+        </div>
+
+        <div class="last-push" [class.danger]="d.daysSinceLastPush >= 3">
+          🕐 Last push: {{ getLastPushLabel(d.daysSinceLastPush) }}
+          <span class="at-risk-warning" *ngIf="d.daysSinceLastPush >= 3">
+            ⚠️ No activity for {{ d.daysSinceLastPush }} days!
+          </span>
+        </div>
+
+        <div class="stat-progress">
+          <div class="stat-progress-bar">
+            <div
+              class="stat-progress-fill"
+              [style.width.%]="d.avgProgress"
+              [ngClass]="getRiskClass(d.riskLevel)"
+            ></div>
+          </div>
+          <span>{{ d.avgProgress }}%</span>
+        </div>
+
+        <div class="recent-commits" *ngIf="d.recentCommits?.length > 0">
+          <div class="commits-title">Recent Commits:</div>
+          <div class="commit-item" *ngFor="let c of d.recentCommits">
+            <span class="commit-dot">●</span>
+            <span class="commit-msg">{{ c.message }}</span>
+            <span class="commit-time">+{{ c.linesAdded }} lines</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ No GitHub activity yet -->
+  <div class="no-github" *ngIf="devStats.length === 0 && members.length > 0">
+    <p>📭 No GitHub activity tracked yet.</p>
+    <p>Developers need to push commits with FR numbers in the message.</p>
+    <code>git commit -m "feat: FR-3.1 user auth completed"</code>
+  </div>
 </div>
 
-<!-- ✅ Assign Modal -->
+<!-- ✅ Assign Modal — outside team-container -->
 <div
   class="modal-overlay"
   *ngIf="showAssignModal"
@@ -146,9 +247,7 @@
         [class.selected]="selectedMember === m"
         (click)="selectMember(m)"
       >
-        <div class="member-avatar small">
-          {{ getMemberInitial(m) }}
-        </div>
+        <div class="member-avatar small">{{ getMemberInitial(m) }}</div>
         <div>
           <div class="member-name">{{ getMemberName(m) }}</div>
           <div class="member-email">{{ m.developerEmail }}</div>

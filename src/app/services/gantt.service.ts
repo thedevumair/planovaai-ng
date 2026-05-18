@@ -8,6 +8,7 @@ export class GanttService {
   private baseUrl = 'http://localhost:8080/api';
   private tasks: any[] = [];
   private model: string = '';
+  private projectId: string = '';
 
   private readonly TASKS_KEY = 'planova_tasks';
   private readonly MODEL_KEY = 'planova_model';
@@ -44,10 +45,19 @@ export class GanttService {
     return localStorage.getItem(this.MODEL_KEY) || '';
   }
 
+  setProjectId(projectId: string): void {
+    this.projectId = projectId;
+  }
+
+  getProjectId(): string {
+    return this.projectId;
+  }
+
   // Clear everything on logout or new analysis
   clearAll(): void {
     this.tasks = [];
     this.model = '';
+    this.projectId = '';
     localStorage.removeItem(this.TASKS_KEY);
     localStorage.removeItem(this.MODEL_KEY);
   }
