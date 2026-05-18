@@ -6,6 +6,7 @@ import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
 import { authGuard } from './guards/auth.guard';
 import { TeamComponent } from './components/team/team.component';
+import { DeveloperTasksComponent } from './components/developer-tasks/developer-tasks.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -15,4 +16,5 @@ export const routes: Routes = [
   { path: 'gantt', component: GanttComponent, canActivate: [authGuard] },
   { path: 'time-debt', component: TimeDebtComponent, canActivate: [authGuard] },
   { path: 'team', component: TeamComponent, canActivate: [authGuard] },
+  { path: 'developer-tasks', component: DeveloperTasksComponent, canActivate: [authGuard] }
 ];

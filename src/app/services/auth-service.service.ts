@@ -26,6 +26,11 @@ export class AuthServiceService {
     localStorage.setItem('token', data.token);
     localStorage.setItem('userId', data.userId);
     localStorage.setItem('userName', data.name);
+    localStorage.setItem('userRole', data.role || 'DEVELOPER');
+  }
+
+  getRole(): string {
+    return localStorage.getItem('userRole') || 'DEVELOPER';
   }
 
   getToken(): string | null {
@@ -41,7 +46,10 @@ export class AuthServiceService {
   }
 
   logout() {
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
     this.router.navigate(['/login']);
   }
 }
